@@ -1,6 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import LenisProvider from "@/components/providers/lenis-provider";
-import "@/styles/globals.css";
 
 export const metadata: Metadata = {
   title: "PWA App",
@@ -12,17 +10,15 @@ export const viewport: Viewport = {
   themeColor: "#ffffff",
 };
 
-export default function RootLayout({
+export default function AuthLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
     <html lang="en">
-      <body className="flex font-tommy-regular min-h-screen overflow-x-hidden overflow-y-scroll no-scrollbar">
-        <LenisProvider>
+      <body className="flex font-nexa min-h-screen overflow-x-hidden overflow-y-scroll no-scrollbar">
           {children}
-        </LenisProvider>
       </body>
     </html>
   );
