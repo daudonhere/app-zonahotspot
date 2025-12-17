@@ -3,6 +3,7 @@ import type { NextConfig } from "next";
 
 const withPWA = withPWAInit({
   dest: "public",
+  register: true,
   cacheOnFrontEndNav: true,
   aggressiveFrontEndNavCaching: true,
   reloadOnOnline: true,

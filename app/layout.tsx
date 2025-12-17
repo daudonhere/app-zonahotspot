@@ -24,7 +24,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <link rel="icon" href="/icons/chain.svg" type="image/x-icon" />
+        <link rel="icon" href="/icons/wifi.png" type="image/x-icon" />
       </head>
       <body className="flex min-h-screen overflow-x-hidden font-tommy-regular">
         <ClientProviders>
