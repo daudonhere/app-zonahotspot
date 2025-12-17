@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "motion/react";
 import SigninSection from "@/app/auth/sections/SigninSection";
 import SignupSection from "@/app/auth/sections/SignupSection";
 
 export default function AuthPage() {
-  const [view, setView] = useState<'signin' | 'signup'>('signin');
+  const [view, setView] = useState<"signin" | "signup">("signin");
 
   return (
     <main className="flex flex-1 w-screen h-screen justify-center bg-secondary-theme-foreground/30">
@@ -16,22 +16,24 @@ export default function AuthPage() {
             ZONA HOTSPOT
           </h6>
         </div>
+
         <AnimatePresence mode="wait">
           <motion.div
-            key={view} 
+            key={view}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.5 }}
             className="flex flex-[6] w-full items-start px-8 py-2"
           >
-            {view === 'signin' ? (
-              <SigninSection onSwitchView={() => setView('signup')} />
+            {view === "signin" ? (
+              <SigninSection onSwitchView={() => setView("signup")} />
             ) : (
-              <SignupSection onSwitchView={() => setView('signin')} />
+              <SignupSection onSwitchView={() => setView("signin")} />
             )}
           </motion.div>
         </AnimatePresence>
+
         <div className="flex flex-[2] w-full items-start justify-center">
           <h6 className="text-[10px] text-secondary-theme-foreground font-semibold tracking-widest">
             © 2025 Zonahotspot All rights reserved
