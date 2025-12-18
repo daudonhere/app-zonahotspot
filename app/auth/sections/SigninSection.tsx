@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import Image from "next/image";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,8 @@ import {
   InputOTPSeparator,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
+import { useRouter } from "next/navigation";
+import { useLoaderStore } from "@/stores/loaderStore";
 
 interface SigninSectionProps {
   onSwitchView: () => void;
@@ -24,6 +26,13 @@ export default function SigninSection({ onSwitchView }: SigninSectionProps) {
   const [view, setView] = useState<AuthView>("login");
   const [countdown, setCountdown] = useState(15);
   const [isTimerActive, setIsTimerActive] = useState(false);
+  const router = useRouter();
+  const { startLoading } = useLoaderStore();
+  
+  const handleLogin = () => {
+    startLoading();
+    router.push("/");
+  };
 
   const handleNavigate = (targetView: AuthView) => {
     if (targetView === "otp") {
@@ -110,6 +119,7 @@ export default function SigninSection({ onSwitchView }: SigninSectionProps) {
                 </div>
                 <div className="flex flex-4 w-full justify-end">
                   <Button
+                    onClick={handleLogin}
                     variant="primary"
                     className="flex flex-row w-full items-center"
                   >

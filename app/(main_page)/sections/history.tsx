@@ -1,11 +1,24 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+import { useLoaderStore } from "@/stores/loaderStore";
+
 export default function HistorySection() {
+  const router = useRouter();
+  const { startLoading } = useLoaderStore();
+
+  const handleSeeHistory = () => {
+    startLoading();
+    router.push("/history");
+  };
+
   return (
     <div className="flex flex-col gap-3">
       <div className="flex justify-between text-sm font-bold">
         <span>Riwayat</span>
-        <span className="text-primary-theme text-xs">Selengkapnya</span>
+        <button onClick={handleSeeHistory} className="text-primary-theme text-xs">
+          Selengkapnya
+        </button>
       </div>
 
       <div
