@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { ChevronRight } from "lucide-react";
 
 export default function ProfilePage() {
   return (
@@ -87,7 +88,9 @@ function ActionRow({ label }: { label: string }) {
   return (
     <button className="flex w-full justify-between rounded-lg border border-ring/50 px-3 py-2 text-sm font-semibold text-foreground shadow-sm">
       {label}
-      <span className="text-primary-theme">›</span>
+      <span className="text-primary-theme">
+        <ChevronRight/>
+      </span>
     </button>
   );
 }
