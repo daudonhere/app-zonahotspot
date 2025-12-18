@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import ClientProviders from "@/components/providers/client-provider";
+import ServiceWorkerProvider from "@/components/providers/sw-provider";
 import "@/styles/globals.css";
 
 export const metadata: Metadata = {
@@ -27,6 +28,7 @@ export default function RootLayout({
         <link rel="icon" href="/icons/wifi.png" type="image/x-icon" />
       </head>
       <body className="flex min-h-screen overflow-x-hidden font-tommy-regular">
+        <ServiceWorkerProvider />
         <ClientProviders>
           {children}
         </ClientProviders>
