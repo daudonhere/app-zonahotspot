@@ -1,6 +1,5 @@
 "use client";
 
-import { useLoaderStore } from "@/stores/loaderStore";
 import { useInvoiceStore, InvoiceItem } from "@/stores/invoiceStore";
 import { Wifi, Calendar, Trash2, Ticket } from "lucide-react";
 import { toast } from "sonner";
@@ -10,34 +9,28 @@ const CONTACT_INFO = {
   waNumber: "6285117534914",
 };
 
-// Hardcoded Payment Invoice
-const PAYMENT_INVOICE: InvoiceItem = {
-  id: "INV-2025000123",
-  category: "Pembayaran",
-  title: "Tagihan Bulanan",
-  customerName: "Saepul",
-  customerId: "ZH-0098123",
-  email: "john.doe@email.com",
-  packageName: "Nyaman (30 Mbps)",
-  duration: "1 Bulan",
-  date: "26 Des 2025",
-  dueDate: "27 Des 2025, 23:59",
-  expiresAt: Date.now() + 86400000, // 24 hours from now
-  status: "Menunggu Pembayaran",
-  amount: 200000,
-};
-
 export default function InvoicePage() {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { startLoading } = useLoaderStore();
-  
-  const { invoices: storeInvoices, markAsProcessing, resetProcessingStatus, removeInvoice } = useInvoiceStore();
+  const { invoices, markAsProcessing, resetProcessingStatus, removeInvoice } = useInvoiceStore();
   const [isMounted, setIsMounted] = useState(false);
-  
-  // Combine hardcoded payment invoice with store invoices (purchases only)
-  // We strictly filter store invoices to only include "Pembelian" to avoid duplicates
-  const purchaseInvoices = storeInvoices.filter(inv => inv.category === "Pembelian" || inv.id.includes("-"));
-  const allInvoices = [PAYMENT_INVOICE, ...purchaseInvoices];
+
+  // Hardcoded Payment Invoice generated on client side to avoid hydration mismatch
+  const [paymentInvoice] = useState<InvoiceItem>(() => ({
+    id: "INV-2025000123",
+    category: "Pembayaran",
+    title: "Tagihan Bulanan",
+    customerName: "Saepul",
+    customerId: "ZH-0098123",
+    email: "john.doe@email.com",
+    packageName: "Nyaman (30 Mbps)",
+    duration: "1 Bulan",
+    date: "26 Des 2025",
+    dueDate: "27 Des 2025, 23:59",
+    expiresAt: Date.now() + 86400000, // 24 hours from mount
+    status: "Menunggu Pembayaran",
+    amount: 200000,
+  }));
+
+  const allInvoices = [paymentInvoice, ...invoices.filter(inv => inv.category === "Pembelian" || inv.id.includes("-"))];
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -62,30 +55,20 @@ export default function InvoicePage() {
               data={invoice}
               index={index}
               onPay={() => {
-                // For hardcoded invoice, we might need a local state or just handle it visually
-                // But since markAsProcessing updates the store, it won't affect the hardcoded const.
-                // To support "Process" status for the hardcoded one, we'd typically need it in state.
-                // However, per request "hardcode saja kodenya", I will just trigger the action.
-                // If it's the hardcoded one, we might show a toast since state won't persist for it unless we move it to state.
-                if (invoice.id === PAYMENT_INVOICE.id) {
+                if (invoice.id === paymentInvoice.id) {
                     toast.success("Status diperbarui ke Proses (Demo)");
-                    // For a real app, hardcoded data implies it doesn't change state effectively 
-                    // unless we wrap it in a useState inside the component.
                 } else {
                     markAsProcessing(invoice.id);
                 }
               }}
               onDelete={() => {
-                if (invoice.id === PAYMENT_INVOICE.id) {
+                if (invoice.id === paymentInvoice.id) {
                      toast.error("Tagihan wajib tidak dapat dihapus");
                 } else {
                     removeInvoice(invoice.id);
                     toast.success("Invoice berhasil dihapus");
                 }
               }}
-              // Pass a specific isProcessing override for the hardcoded one if needed, 
-              // but since it's const, it will always be "Menunggu Pembayaran" on re-render
-              // unless we make it stateful. I'll stick to the const as requested.
             />
           ))
         ) : (
@@ -102,7 +85,6 @@ function InvoicePaper({ data, index, onPay, onDelete }: { data: InvoiceItem; ind
   const isExpired = data.status === "Kadaluarsa";
   const isPaid = data.status === "Lunas";
   const isDisabled = isExpired || isPaid;
-  // Check local processing state if needed, but relying on props for now.
   const isProcessing = data.status === "Proses";
 
   const [timeLeft, setTimeLeft] = useState<string>("");
