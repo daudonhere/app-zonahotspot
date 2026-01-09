@@ -16,7 +16,7 @@ export default function ClientProviders({
         <LockProvider>
           {children}
         </LockProvider>
-        <Toaster position="top-right" />
+        <Toaster position="top-right" richColors />
       </LenisProvider>
     </LoaderProvider>
   );

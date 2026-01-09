@@ -1,0 +1,85 @@
+   ▲ Next.js 16.0.10 (webpack)
+   - Local:         http://localhost:3000
+   - Network:       http://192.168.1.5:3000
+   - Environments: .env.local
+
+ ✓ Starting...
+ ✓ (pwa) Compiling for server...
+ ✓ (pwa) Compiling for server...
+ ✓ (pwa) Compiling for client (static)...
+ ○ (pwa) Service worker: /home/hellodaud/Documents/zonahotspot/app-zonahotspot/public/sw.js
+ ○ (pwa)   URL: /sw.js
+ ○ (pwa)   Scope: /
+ ○ (pwa) This app will fallback to these precached routes when fetching from the cache and the network fails:
+ ○ (pwa)   Documents (pages): /offline
+ ○ (pwa) Building in development mode, caching and precaching are disabled for the most part. This means that offline support is disabled, but you can continue developing other functions in service worker.
+ ✓ Ready in 5.9s
+ ○ Compiling / ...
+ GET / 200 in 17.0s (compile: 16.1s, render: 935ms)
+ GET / 200 in 253ms (compile: 32ms, render: 221ms)
+ ○ Compiling /auth ...
+ ⨯ ./app/auth/sections/SigninSection.tsx
+Error:   [31mx[0m Expected ',', got 'isOpen'
+     ,-[[36;1;4m/home/hellodaud/Documents/zonahotspot/app-zonahotspot/app/auth/sections/SigninSection.tsx[0m:381:1]
+ [2m378[0m |     </div>
+ [2m379[0m | 
+ [2m380[0m |     <RecoveryPhraseModal
+ [2m381[0m |       isOpen={showRecoveryModal}
+     : [35;1m      ^^^^^^[0m
+ [2m382[0m |       onClose={() => setShowRecoveryModal(false)}
+ [2m383[0m |       phrase={recoveryPhrase}
+ [2m384[0m |     />
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./app/auth/sections/SigninSection.tsx
+./app/auth/page.tsx
+ ✓ (pwa) Compiling for client (static)...
+ ○ (pwa) Service worker: /home/hellodaud/Documents/zonahotspot/app-zonahotspot/public/sw.js
+ ○ (pwa)   URL: /sw.js
+ ○ (pwa)   Scope: /
+ ○ (pwa) This app will fallback to these precached routes when fetching from the cache and the network fails:
+ ○ (pwa)   Documents (pages): /offline
+ ○ (pwa) Building in development mode, caching and precaching are disabled for the most part. This means that offline support is disabled, but you can continue developing other functions in service worker.
+ ⨯ ./app/auth/sections/SigninSection.tsx
+Error:   [31mx[0m Expected ',', got 'isOpen'
+     ,-[[36;1;4m/home/hellodaud/Documents/zonahotspot/app-zonahotspot/app/auth/sections/SigninSection.tsx[0m:381:1]
+ [2m378[0m |     </div>
+ [2m379[0m | 
+ [2m380[0m |     <RecoveryPhraseModal
+ [2m381[0m |       isOpen={showRecoveryModal}
+     : [35;1m      ^^^^^^[0m
+ [2m382[0m |       onClose={() => setShowRecoveryModal(false)}
+ [2m383[0m |       phrase={recoveryPhrase}
+ [2m384[0m |     />
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./app/auth/sections/SigninSection.tsx
+./app/auth/page.tsx
+ GET / 500 in 22.7s (compile: 22.4s, render: 268ms)
+ GET /auth 500 in 24.5s (compile: 24.5s, render: 27ms)
+ GET / 500 in 53ms (compile: 24ms, render: 29ms)
+ GET / 500 in 21ms (compile: 6ms, render: 15ms)
+ GET / 500 in 24ms (compile: 7ms, render: 18ms)
+ GET / 500 in 28ms (compile: 9ms, render: 19ms)
+ GET / 500 in 35ms (compile: 13ms, render: 22ms)
+ GET / 500 in 30ms (compile: 12ms, render: 18ms)
+ GET / 500 in 29ms (compile: 7ms, render: 22ms)
+ GET / 500 in 37ms (compile: 14ms, render: 23ms)
+ GET / 500 in 44ms (compile: 13ms, render: 30ms)
+ GET / 500 in 22ms (compile: 9ms, render: 12ms)
+ GET / 500 in 26ms (compile: 6ms, render: 20ms)
+ GET / 500 in 9ms
+ GET / 500 in 29ms (compile: 11ms, render: 18ms)
+ GET / 500 in 26ms (compile: 8ms, render: 18ms)
+ GET / 500 in 28ms (compile: 9ms, render: 19ms)
+ GET / 500 in 25ms (compile: 7ms, render: 18ms)
+ GET / 500 in 23ms (compile: 6ms, render: 17ms)
+ GET / 500 in 20ms (compile: 8ms, render: 12ms)

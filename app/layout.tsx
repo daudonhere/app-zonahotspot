@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import ClientProviders from "@/components/providers/client-provider";
 import ServiceWorkerProvider from "@/components/providers/sw-provider";
+import ProtectedLayout from "@/components/ProtectedLayout";
 import "@/styles/globals.css";
 
 export const metadata: Metadata = {
@@ -30,7 +31,9 @@ export default function RootLayout({
       <body className="flex min-h-screen overflow-x-hidden font-tommy-regular">
         <ServiceWorkerProvider />
         <ClientProviders>
-          {children}
+          <ProtectedLayout>
+            {children}
+          </ProtectedLayout>
         </ClientProviders>
       </body>
     </html>

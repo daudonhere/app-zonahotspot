@@ -12,6 +12,14 @@ import {
   InputOTPSeparator,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { AUTH_ENDPOINTS, USER_ENDPOINTS } from "@/libs/api/endpoints";
+import { getFullApiUrl } from "@/libs/api/utils";
+import { useLoaderStore } from "@/stores/loaderStore";
+import { authStore } from "@/stores/authStore";
+import RecoveryPhraseModal from "@/components/ui/recovery-phrase-modal";
+import SuccessModal from "@/components/ui/success-modal";
 
 interface SignupSectionProps {
   onSwitchView: () => void;
@@ -23,20 +31,204 @@ export default function SignupSection({ onSwitchView }: SignupSectionProps) {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isTimerActive, setIsTimerActive] = useState(false);
   const [countdown, setCountdown] = useState(15);
+  const [showRecoveryModal, setShowRecoveryModal] = useState(false);
+  const [recoveryPhrase, setRecoveryPhrase] = useState("");
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [verificationEmail, setVerificationEmail] = useState("");
+
+  const [email, setEmail] = useState("");
+  const [fullname, setFullname] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [errors, setErrors] = useState<{ email?: boolean; fullname?: boolean; password?: boolean; confirmPassword?: boolean }>({});
+
+  const router = useRouter();
+  const { startLoading, stopLoading } = useLoaderStore();
+
+  // Listen for messages from social login popups
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) return;
+
+      if (event.data.type === 'social_login_success') {
+        // Check if the response contains a recovery phrase
+        if (event.data.data.result && event.data.data.result.phrase) {
+          setRecoveryPhrase(event.data.data.result.phrase);
+          setShowRecoveryModal(true);
+
+          // Show success message
+          toast.success(event.data.data.description || "Registration successful");
+          setIsVerif(true);
+        } else {
+          if (event.data.data.result?.data?.accessToken) {
+            authStore.login(event.data.data.result.data.accessToken);
+          } else if (event.data.data.accessToken) {
+            authStore.login(event.data.data.accessToken);
+          }
+          toast.success("Login successful!");
+        }
+      } else if (event.data.type === 'social_login_error') {
+        toast.error(`Login failed: ${event.data.error}`);
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
+
+  const handleSocialLogin = (provider: "google" | "github") => {
+    // Open the social login in a popup window
+    const popup = window.open(
+      `${getFullApiUrl(provider === "google" ? AUTH_ENDPOINTS.GOOGLE : AUTH_ENDPOINTS.GITHUB)}`,
+      "social_login",
+      "width=500,height=700"
+    );
+
+    // Focus the popup window
+    if (popup) {
+      popup.focus();
+    }
+  };
 
   const startTimer = () => {
     setCountdown(15);
     setIsTimerActive(true);
   };
 
-  const toggleVerifVisibility = () => {
-    setIsVerif(true);
-    startTimer();
+  const toggleVerifVisibility = async () => {
+    const newErrors: { email?: boolean; fullname?: boolean; password?: boolean; confirmPassword?: boolean } = {};
+
+    if (!email) newErrors.email = true;
+    if (!fullname) newErrors.fullname = true;
+    if (!password) newErrors.password = true;
+    if (!confirmPassword) newErrors.confirmPassword = true;
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      toast.error("Please fill in all fields");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setErrors({ password: true, confirmPassword: true });
+      toast.error("Passwords do not match");
+      return;
+    }
+
+    try {
+      startLoading();
+      const response = await fetch(getFullApiUrl(USER_ENDPOINTS.CREATE_USER), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, fullname, password }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        // Assuming user creation failure might be due to email already taken
+        setErrors({ email: true });
+        throw new Error(data.description || data.message || "Registration failed");
+      }
+
+      const data = await response.json();
+
+      if (data.result && data.result.phrase) {
+        setRecoveryPhrase(data.result.phrase);
+        setShowRecoveryModal(true);
+      } else {
+        setShowSuccessModal(true);
+      }
+
+      toast.success(data.description || "Registration successful, please verify your email");
+      setVerificationEmail(email);
+      setIsVerif(true);
+      startTimer();
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error("An error occurred during registration");
+      }
+    } finally {
+      stopLoading();
+    }
   };
 
-  const handleResendOtp = () => {
-    startTimer();
-    console.log("Re-Sending OTP...");
+  const handleResendOtp = async () => {
+    try {
+      startLoading();
+      const response = await fetch(getFullApiUrl(USER_ENDPOINTS.RESEND_OTP), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email: verificationEmail }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.description || data.message || "Failed to resend OTP");
+      }
+
+      const data = await response.json();
+      toast.success(data.description || "OTP has been resent to your email");
+      startTimer();
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error("An error occurred while resending OTP");
+      }
+    } finally {
+      stopLoading();
+    }
+  };
+
+  const handleVerifyOtp = async (otpValue: string) => {
+    try {
+      startLoading();
+      const response = await fetch(getFullApiUrl(USER_ENDPOINTS.VERIFY_OTP), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: verificationEmail,
+          code: otpValue
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.description || data.message || "OTP verification failed");
+      }
+
+      const data = await response.json();
+
+      if (data.result && data.result.data) {
+        const { accessToken, refreshToken, user } = data.result.data;
+
+        authStore.login(accessToken);
+
+        toast.success(data.description || "Email verified successfully");
+        router.push("/");
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error("An error occurred during OTP verification");
+      }
+    } finally {
+      stopLoading();
+    }
+  };
+
+  const handleSkipVerification = () => {
+    // Redirect to login page when user chooses to skip OTP verification
+    onSwitchView(); // Switch to login view
   };
 
   useEffect(() => {
@@ -74,7 +266,12 @@ export default function SignupSection({ onSwitchView }: SignupSectionProps) {
                     We have sent a Code to your email, check it.
                   </h4>
 
-                  <InputOTP maxLength={6}>
+                  <InputOTP
+                    maxLength={6}
+                    onComplete={(value) => {
+                      handleVerifyOtp(value);
+                    }}
+                  >
                     <InputOTPGroup>
                       <InputOTPSlot index={0} />
                       <InputOTPSlot index={1} />
@@ -105,6 +302,18 @@ export default function SignupSection({ onSwitchView }: SignupSectionProps) {
                       </Button>
                     )}
                   </div>
+
+                  <div className="flex flex-5 w-full items-center justify-center">
+                    <Button
+                      variant="link"
+                      onClick={handleSkipVerification}
+                      className="flex flex-row w-1/2 items-center"
+                    >
+                      <h4 className="text-sm font-base tracking-widest">
+                        Nanti Saja
+                      </h4>
+                    </Button>
+                  </div>
                 </div>
               </>
             ) : (
@@ -112,9 +321,27 @@ export default function SignupSection({ onSwitchView }: SignupSectionProps) {
                 <div className="flex flex-7 flex-col gap-3 items-center justify-center">
                   <div className="flex w-full items-center">
                     <Input
+                      type="text"
+                      placeholder="Full Name"
+                      className={`text-sm text-primary w-full ${errors.fullname ? "border-destructive focus-visible:ring-destructive" : ""}`}
+                      value={fullname}
+                      onChange={(e) => {
+                        setFullname(e.target.value);
+                        if (errors.fullname) setErrors(prev => ({ ...prev, fullname: false }));
+                      }}
+                    />
+                  </div>
+
+                  <div className="flex w-full items-center">
+                    <Input
                       type="email"
                       placeholder="Email"
-                      className="text-sm text-primary w-full"
+                      className={`text-sm text-primary w-full ${errors.email ? "border-destructive focus-visible:ring-destructive" : ""}`}
+                      value={email}
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+                        if (errors.email) setErrors(prev => ({ ...prev, email: false }));
+                      }}
                     />
                   </div>
 
@@ -122,7 +349,12 @@ export default function SignupSection({ onSwitchView }: SignupSectionProps) {
                     <Input
                       type={showPassword ? "text" : "password"}
                       placeholder="Password"
-                      className="text-sm text-primary w-full"
+                      className={`text-sm text-primary w-full ${errors.password ? "border-destructive focus-visible:ring-destructive" : ""}`}
+                      value={password}
+                      onChange={(e) => {
+                        setPassword(e.target.value);
+                        if (errors.password) setErrors(prev => ({ ...prev, password: false }));
+                      }}
                     />
                     <div
                       className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer"
@@ -140,7 +372,12 @@ export default function SignupSection({ onSwitchView }: SignupSectionProps) {
                     <Input
                       type={showConfirmPassword ? "text" : "password"}
                       placeholder="Re-Type Password"
-                      className="text-sm text-primary w-full"
+                      className={`text-sm text-primary w-full ${errors.confirmPassword ? "border-destructive focus-visible:ring-destructive" : ""}`}
+                      value={confirmPassword}
+                      onChange={(e) => {
+                        setConfirmPassword(e.target.value);
+                        if (errors.confirmPassword) setErrors(prev => ({ ...prev, confirmPassword: false }));
+                      }}
                     />
                     <div
                       className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer"
@@ -190,6 +427,7 @@ export default function SignupSection({ onSwitchView }: SignupSectionProps) {
             <div className="flex flex-row gap-2 items-center">
               <Button
                 variant="ghost"
+                onClick={() => handleSocialLogin("google")}
                 className="flex flex-row p-4 items-center rounded-full"
               >
                 <Image
@@ -203,13 +441,14 @@ export default function SignupSection({ onSwitchView }: SignupSectionProps) {
               </Button>
               <Button
                 variant="ghost"
+                onClick={() => handleSocialLogin("github")}
                 className="flex flex-row p-4 items-center rounded-full"
               >
                 <Image
                   src="/icons/github.svg"
                   width={25}
                   height={25}
-                  alt="google"
+                  alt="github"
                   quality={90}
                   priority
                 />
@@ -228,6 +467,22 @@ export default function SignupSection({ onSwitchView }: SignupSectionProps) {
           </div>
         </div>
       </div>
+      <RecoveryPhraseModal
+        isOpen={showRecoveryModal}
+        onClose={() => setShowRecoveryModal(false)}
+        phrase={recoveryPhrase}
+      />
+
+      <SuccessModal
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        title="Registration Successful!"
+        message="Your account has been created successfully. Please check your email to verify your account."
+        onConfirm={() => {
+          setShowSuccessModal(false);
+          // Optionally redirect to login or another page
+        }}
+      />
     </div>
   );
 }

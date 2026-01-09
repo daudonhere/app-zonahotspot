@@ -52,6 +52,8 @@ const nextConfig: NextConfig = {
     }
     return config;
   },
+  // Add empty turbopack config to silence the error
+  turbopack: {},
 };
 
 export default withPWA(nextConfig);

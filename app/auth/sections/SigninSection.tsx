@@ -13,7 +13,12 @@ import {
   InputOTPSlot,
 } from "@/components/ui/input-otp";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { useLoaderStore } from "@/stores/loaderStore";
+import { AUTH_ENDPOINTS } from "@/libs/api/endpoints";
+import { getFullApiUrl } from "@/libs/api/utils";
+import { authStore } from "@/stores/authStore";
+import RecoveryPhraseModal from "@/components/ui/recovery-phrase-modal";
 
 interface SigninSectionProps {
   onSwitchView: () => void;
@@ -26,12 +31,109 @@ export default function SigninSection({ onSwitchView }: SigninSectionProps) {
   const [view, setView] = useState<AuthView>("login");
   const [countdown, setCountdown] = useState(15);
   const [isTimerActive, setIsTimerActive] = useState(false);
+  const [showRecoveryModal, setShowRecoveryModal] = useState(false);
+  const [recoveryPhrase, setRecoveryPhrase] = useState("");
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [errors, setErrors] = useState<{ email?: boolean; password?: boolean }>({});
+
   const router = useRouter();
-  const { startLoading } = useLoaderStore();
+  const { startLoading, stopLoading } = useLoaderStore();
+
+  // Listen for messages from social login popups
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) return;
+
+      if (event.data.type === 'social_login_success') {
+        // Check if the response contains a recovery phrase (for new users)
+        if (event.data.data.result && event.data.data.result.phrase) {
+          setRecoveryPhrase(event.data.data.result.phrase);
+          setShowRecoveryModal(true);
+
+          // Show success message
+          toast.success(event.data.data.description || "Registration successful");
+        } else {
+          if (event.data.data.result?.data?.accessToken) {
+            authStore.login(event.data.data.result.data.accessToken);
+          } else if (event.data.data.accessToken) {
+            authStore.login(event.data.data.accessToken);
+          }
+          toast.success("Login successful!");
+          router.push("/");
+        }
+      } else if (event.data.type === 'social_login_error') {
+        toast.error(`Login failed: ${event.data.error}`);
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [router]);
   
-  const handleLogin = () => {
-    startLoading();
-    router.push("/");
+  const handleSocialLogin = (provider: "google" | "github") => {
+    // Open the social login in a popup window
+    const popup = window.open(
+      `${getFullApiUrl(provider === "google" ? AUTH_ENDPOINTS.GOOGLE : AUTH_ENDPOINTS.GITHUB)}`,
+      "social_login",
+      "width=500,height=700"
+    );
+
+    // Focus the popup window
+    if (popup) {
+      popup.focus();
+    }
+  };
+  
+  const handleLogin = async () => {
+    const newErrors: { email?: boolean; password?: boolean } = {};
+    if (!email) newErrors.email = true;
+    if (!password) newErrors.password = true;
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      toast.error("Please fill in all fields");
+      return;
+    }
+
+    try {
+      startLoading();
+      const response = await fetch(getFullApiUrl(AUTH_ENDPOINTS.LOGIN), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        // If specific field errors were returned we would map them here.
+        // For generic errors, highlight both fields as user credentials were rejected.
+        setErrors({ email: true, password: true });
+        throw new Error(data.description || data.message || "Login failed");
+      }
+
+      const data = await response.json();
+
+      if (data.result?.data?.accessToken) {
+        authStore.login(data.result.data.accessToken);
+      } else if (data.accessToken) {
+        authStore.login(data.accessToken);
+      }
+
+      toast.success(data.description || "Login successful");
+      router.push("/");
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error("An error occurred during login");
+      }
+    } finally {
+      stopLoading();
+    }
   };
 
   const handleNavigate = (targetView: AuthView) => {
@@ -85,14 +187,24 @@ export default function SigninSection({ onSwitchView }: SigninSectionProps) {
                   <Input
                     type="email"
                     placeholder="Email"
-                    className="text-sm text-primary w-full"
+                    className={`text-sm text-primary w-full ${errors.email ? "border-destructive focus-visible:ring-destructive" : ""}`}
+                    value={email}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      if (errors.email) setErrors(prev => ({ ...prev, email: false }));
+                    }}
                   />
                 </div>
                 <div className="relative flex w-full items-center">
                   <Input
                     type={showPassword ? "text" : "password"}
                     placeholder="Password"
-                    className="text-sm text-primary w-full"
+                    className={`text-sm text-primary w-full ${errors.password ? "border-destructive focus-visible:ring-destructive" : ""}`}
+                    value={password}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      if (errors.password) setErrors(prev => ({ ...prev, password: false }));
+                    }}
                   />
                   <div
                     className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer"
@@ -236,6 +348,7 @@ export default function SigninSection({ onSwitchView }: SigninSectionProps) {
             <div className="flex flex-row gap-2 items-center">
               <Button
                 variant="ghost"
+                onClick={() => handleSocialLogin("google")}
                 className="flex flex-row p-4 items-center rounded-full"
               >
                 <Image
@@ -249,13 +362,14 @@ export default function SigninSection({ onSwitchView }: SigninSectionProps) {
               </Button>
               <Button
                 variant="ghost"
+                onClick={() => handleSocialLogin("github")}
                 className="flex flex-row p-4 items-center rounded-full"
               >
                 <Image
                   src="/icons/github.svg"
                   width={25}
                   height={25}
-                  alt="google"
+                  alt="github"
                   quality={90}
                   priority
                 />
@@ -274,6 +388,11 @@ export default function SigninSection({ onSwitchView }: SigninSectionProps) {
           </div>
         </div>
       </div>
+      <RecoveryPhraseModal
+        isOpen={showRecoveryModal}
+        onClose={() => setShowRecoveryModal(false)}
+        phrase={recoveryPhrase}
+      />
     </div>
   );
 }

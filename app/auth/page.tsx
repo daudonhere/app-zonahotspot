@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import SigninSection from "@/app/auth/sections/SigninSection";
@@ -63,10 +64,15 @@ export default function AuthPage() {
           </div>
         )}
 
-        <div className="flex flex-1 w-full items-center justify-center">
-          <h6 className="text-2xl text-primary-theme font-extrabold">
-            ZONA HOTSPOT
-          </h6>
+        <div className="flex w-full items-center justify-center py-10">
+          <Image
+            src="/icons/zonahotspot.png"
+            alt="Zona Hotspot Logo"
+            width={180}
+            height={180}
+            priority
+            className="object-contain"
+          />
         </div>
 
         <AnimatePresence mode="wait">
