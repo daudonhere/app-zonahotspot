@@ -7,10 +7,13 @@ import SigninSection from "@/app/auth/sections/SigninSection";
 import SignupSection from "@/app/auth/sections/SignupSection";
 import { useInstallPrompt } from "@/hooks/use-install-prompt";
 import { isIOS, isInStandaloneMode } from "@/libs/is-ios";
+import { useRedirectIfAuthenticated } from "@/hooks/useRedirectIfAuthenticated";
 
 export default function AuthPage() {
   const [view, setView] = useState<"signin" | "signup">("signin");
   const { isInstallable, promptInstall } = useInstallPrompt();
+
+  useRedirectIfAuthenticated();
 
   const [showIOSHint, setShowIOSHint] = useState(() => {
     if (typeof window === "undefined") return false;
