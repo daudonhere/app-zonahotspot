@@ -1,14 +1,11 @@
-// app/api/auth/google/callback/route.ts
 import { NextRequest } from "next/server";
-import { cookies } from "next/headers";
-
+import { AUTH_ENDPOINTS } from "@/libs/api/endpoints";
+import { getFullApiUrl } from "@/libs/api/utils";
 export async function GET(request: NextRequest) {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
   const error = url.searchParams.get("error");
-
   if (error) {
-    // Handle error case
     return new Response(`
       <!DOCTYPE html>
       <html>
@@ -34,7 +31,6 @@ export async function GET(request: NextRequest) {
       },
     });
   }
-
   if (!code) {
     return new Response(`
       <!DOCTYPE html>
@@ -53,24 +49,25 @@ export async function GET(request: NextRequest) {
       },
     });
   }
-
   try {
-    // Exchange the code for tokens and get user info
-    const tokenResponse = await fetch(process.env.NEXT_PUBLIC_API_URL + "/auth/google/callback", {
+    const tokenResponse = await fetch(getFullApiUrl(AUTH_ENDPOINTS.GOOGLE_CALLBACK), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ code }),
     });
-
     const tokenData = await tokenResponse.json();
-
     if (!tokenResponse.ok) {
       throw new Error(tokenData.message || "Failed to exchange code for tokens");
     }
-
-    // Send success message to parent window
+    const setCookieHeader = tokenResponse.headers.get("set-cookie");
+    const responseHeaders: Record<string, string> = {
+      'Content-Type': 'text/html',
+    };
+    if (setCookieHeader) {
+      responseHeaders['Set-Cookie'] = setCookieHeader;
+    }
     return new Response(`
       <!DOCTYPE html>
       <html>
@@ -84,7 +81,6 @@ export async function GET(request: NextRequest) {
               }, '*');
               window.close();
             } else {
-              // If no opener, redirect to main page
               window.location.href = '/';
             }
           </script>
@@ -95,9 +91,7 @@ export async function GET(request: NextRequest) {
       </html>
     `, {
       status: 200,
-      headers: {
-        'Content-Type': 'text/html',
-      },
+      headers: responseHeaders,
     });
   } catch (error) {
     console.error("Google OAuth callback error:", error);

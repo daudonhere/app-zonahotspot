@@ -1,9 +1,7 @@
 "use client";
-
 import { motion, AnimatePresence } from "motion/react";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2 } from "lucide-react";
-
 interface SuccessModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -12,7 +10,6 @@ interface SuccessModalProps {
   onConfirm?: () => void;
   confirmText?: string;
 }
-
 export default function SuccessModal({
   isOpen,
   onClose,
@@ -28,7 +25,6 @@ export default function SuccessModal({
       onClose();
     }
   };
-
   return (
     <AnimatePresence>
       {isOpen && (
@@ -50,15 +46,12 @@ export default function SuccessModal({
               <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mb-4">
                 <CheckCircle2 className="w-10 h-10 text-green-600" />
               </div>
-              
               <h3 className="text-lg font-bold text-foreground mb-2">
                 {title}
               </h3>
-              
               <p className="text-sm text-muted-foreground mb-6">
                 {message}
               </p>
-              
               <Button
                 className="w-full max-w-[200px]"
                 onClick={handleConfirm}

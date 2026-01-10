@@ -1,9 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-
 export type InvoiceStatus = "Menunggu Pembayaran" | "Lunas" | "Kadaluarsa" | "Proses";
 export type InvoiceCategory = "Pembelian" | "Pembayaran";
-
 export interface InvoiceItem {
   id: string;
   category: InvoiceCategory;
@@ -15,11 +13,10 @@ export interface InvoiceItem {
   duration: string;
   date: string;
   dueDate: string;
-  expiresAt?: number; // Timestamp for countdown
+  expiresAt?: number; 
   status: InvoiceStatus;
   amount: number;
 }
-
 interface InvoiceState {
   invoices: InvoiceItem[];
   addInvoice: (invoice: InvoiceItem) => void;
@@ -28,10 +25,7 @@ interface InvoiceState {
   removeInvoice: (id: string) => void;
   resetInvoices: () => void;
 }
-
-// Initial state is empty to avoid duplication with hardcoded data on the page
 const INITIAL_INVOICES: InvoiceItem[] = [];
-
 export const useInvoiceStore = create<InvoiceState>()(
   persist(
     (set) => ({

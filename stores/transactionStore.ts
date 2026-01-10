@@ -1,6 +1,5 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-
 export interface InvoiceData {
   invoiceId: string;
   date: string;
@@ -13,7 +12,6 @@ export interface InvoiceData {
   amount: number;
   formattedAmount: string;
 }
-
 export interface PaymentMethod {
   id: string;
   name: string;
@@ -22,7 +20,6 @@ export interface PaymentMethod {
   accountNumber: string;
   accountName: string;
 }
-
 interface TransactionState {
   invoiceData: InvoiceData | null;
   selectedPaymentMethod: PaymentMethod | null;
@@ -30,7 +27,6 @@ interface TransactionState {
   setPaymentMethod: (method: PaymentMethod) => void;
   resetTransaction: () => void;
 }
-
 export const useTransactionStore = create<TransactionState>()(
   persist(
     (set) => ({

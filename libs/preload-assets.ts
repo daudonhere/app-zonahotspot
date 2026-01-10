@@ -1,5 +1,4 @@
 import { Asset } from "@/hooks/useAssetPreloader";
-
 export const initialAssets: Asset[] = [
   {
     type: "font",

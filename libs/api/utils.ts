@@ -1,7 +1,10 @@
 export const getFullApiUrl = (endpoint: string): string => {
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || "";
-  // Ensure we don't have double slashes if base ends with / and endpoint starts with /
-  const cleanBase = baseUrl.replace(/\/+$/, "");
+  if (typeof window === 'undefined') {
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "";
+    const cleanBase = baseUrl.replace(/\/+$/, "");
+    const cleanEndpoint = endpoint.replace(/^\/+/, "");
+    return `${cleanBase}/${cleanEndpoint}`;
+  }
   const cleanEndpoint = endpoint.replace(/^\/+/, "");
-  return `${cleanBase}/${cleanEndpoint}`;
+  return `/api-proxy/${cleanEndpoint}`;
 };

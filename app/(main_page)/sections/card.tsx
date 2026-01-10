@@ -1,12 +1,10 @@
 "use client";
-
 import {
   ArrowUpCircle,
   ArrowDownCircle,
   BarChart3,
   Activity,
 } from "lucide-react";
-
 export default function CardSection() {
   return (
     <div className="w-full rounded-2xl bg-background border border-ring/50 p-4 shadow-xl">
@@ -22,7 +20,6 @@ export default function CardSection() {
           </button>
         </div>
       </div>
-
       <div className="mt-6 grid grid-cols-4 gap-4 text-center">
         <ActionItem
           icon={<ArrowUpCircle size={22} />}
@@ -44,7 +41,6 @@ export default function CardSection() {
     </div>
   );
 }
-
 function ActionItem({
   icon,
   label,

@@ -1,8 +1,6 @@
 "use client";
-
 import Image from "next/image";
 import { ChevronRight } from "lucide-react";
-
 export default function ProfilePage() {
   return (
     <div className="flex w-full flex-col gap-4 p-3">
@@ -15,19 +13,16 @@ export default function ProfilePage() {
             className="object-cover"
           />
         </div>
-
         <div className="text-center">
           <p className="text-lg font-extrabold">Saepul</p>
           <p className="text-xs opacity-80">saepul@email.com</p>
         </div>
-
         <button className="mt-2 rounded-lg bg-background px-4 py-1 text-xs font-bold text-primary-theme shadow">
           Ubah Foto
         </button>
       </div>
       <div className="rounded-xl bg-background p-4 shadow-xl border-2 border-ring/50">
         <p className="text-sm font-bold text-foreground">Informasi Akun</p>
-
         <div className="mt-3 flex flex-col gap-3 text-sm">
           <InfoRow label="Nama Lengkap" value="Saepul" />
           <InfoRow label="Email" value="saepul@email.com" />
@@ -36,18 +31,15 @@ export default function ProfilePage() {
       </div>
       <div className="rounded-xl bg-background p-4 shadow-xl border-2 border-ring/50">
         <p className="text-sm font-bold text-foreground">Keamanan</p>
-
         <div className="mt-3 flex flex-col gap-3">
           <ActionRow label="Ubah Kata Sandi" />
         </div>
       </div>
       <div className="rounded-xl bg-background p-4 shadow-xl border-2 border-ring/50">
         <p className="text-sm font-bold text-foreground">Alamat</p>
-
         <p className="mt-2 text-sm text-foreground">
           Jl. Mawar No. 12, Kecamatan Sukamaju, Kota Bandung, Jawa Barat 40123
         </p>
-
         <button className="mt-3 rounded-lg bg-primary-theme px-4 py-2 text-xs font-bold text-background shadow">
           Ubah Alamat
         </button>
@@ -62,11 +54,9 @@ export default function ProfilePage() {
           </button>
         </div>
       </div>
-
     </div>
   );
 }
-
 function InfoRow({
   label,
   value,
@@ -83,7 +73,6 @@ function InfoRow({
     </div>
   );
 }
-
 function ActionRow({ label }: { label: string }) {
   return (
     <button className="flex w-full justify-between rounded-lg border border-ring/50 px-3 py-2 text-sm font-semibold text-foreground shadow-sm">

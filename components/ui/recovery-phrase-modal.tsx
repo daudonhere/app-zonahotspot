@@ -1,34 +1,28 @@
 "use client";
-
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Button } from "@/components/ui/button";
 import { Check, Copy } from "lucide-react";
 import { toast } from "sonner";
-
 interface RecoveryPhraseModalProps {
   isOpen: boolean;
   onClose: () => void;
   phrase: string;
 }
-
 export default function RecoveryPhraseModal({ 
   isOpen, 
   onClose, 
   phrase 
 }: RecoveryPhraseModalProps) {
   const [copied, setCopied] = useState(false);
-
   const handleCopy = () => {
     navigator.clipboard.writeText(phrase);
     setCopied(true);
     toast.success("Recovery phrase copied to clipboard!");
-    
     setTimeout(() => {
       setCopied(false);
     }, 2000);
   };
-
   return (
     <AnimatePresence>
       {isOpen && (
@@ -54,13 +48,11 @@ export default function RecoveryPhraseModal({
                 Simpan kunci recovery untuk reset kata sandi, kunci tidak akan muncul kembali
               </p>
             </div>
-
             <div className="mb-6">
               <div className="rounded-lg border border-input bg-card p-4 font-mono text-sm break-words">
                 {phrase}
               </div>
             </div>
-
             <div className="flex flex-col sm:flex-row gap-3">
               <Button 
                 variant="outline" 

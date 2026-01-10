@@ -1,5 +1,4 @@
 "use client";
-
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import Image from "next/image";
@@ -20,11 +19,9 @@ import { useLoaderStore } from "@/stores/loaderStore";
 import { authStore } from "@/stores/authStore";
 import RecoveryPhraseModal from "@/components/ui/recovery-phrase-modal";
 import SuccessModal from "@/components/ui/success-modal";
-
 interface SignupSectionProps {
   onSwitchView: () => void;
 }
-
 export default function SignupSection({ onSwitchView }: SignupSectionProps) {
   const [isVerif, setIsVerif] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -35,28 +32,20 @@ export default function SignupSection({ onSwitchView }: SignupSectionProps) {
   const [recoveryPhrase, setRecoveryPhrase] = useState("");
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [verificationEmail, setVerificationEmail] = useState("");
-
   const [email, setEmail] = useState("");
   const [fullname, setFullname] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [errors, setErrors] = useState<{ email?: boolean; fullname?: boolean; password?: boolean; confirmPassword?: boolean }>({});
-
   const router = useRouter();
   const { startLoading, stopLoading } = useLoaderStore();
-
-  // Listen for messages from social login popups
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       if (event.origin !== window.location.origin) return;
-
       if (event.data.type === 'social_login_success') {
-        // Check if the response contains a recovery phrase
         if (event.data.data.result && event.data.data.result.phrase) {
           setRecoveryPhrase(event.data.data.result.phrase);
           setShowRecoveryModal(true);
-
-          // Show success message
           toast.success(event.data.data.description || "Registration successful");
           setIsVerif(true);
         } else {
@@ -71,50 +60,39 @@ export default function SignupSection({ onSwitchView }: SignupSectionProps) {
         toast.error(`Login failed: ${event.data.error}`);
       }
     };
-
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
   }, []);
-
   const handleSocialLogin = (provider: "google" | "github") => {
-    // Open the social login in a popup window
     const popup = window.open(
       `${getFullApiUrl(provider === "google" ? AUTH_ENDPOINTS.GOOGLE : AUTH_ENDPOINTS.GITHUB)}`,
       "social_login",
       "width=500,height=700"
     );
-
-    // Focus the popup window
     if (popup) {
       popup.focus();
     }
   };
-
   const startTimer = () => {
     setCountdown(15);
     setIsTimerActive(true);
   };
-
   const toggleVerifVisibility = async () => {
     const newErrors: { email?: boolean; fullname?: boolean; password?: boolean; confirmPassword?: boolean } = {};
-
     if (!email) newErrors.email = true;
     if (!fullname) newErrors.fullname = true;
     if (!password) newErrors.password = true;
     if (!confirmPassword) newErrors.confirmPassword = true;
-
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       toast.error("Please fill in all fields");
       return;
     }
-
     if (password !== confirmPassword) {
       setErrors({ password: true, confirmPassword: true });
       toast.error("Passwords do not match");
       return;
     }
-
     try {
       startLoading();
       const response = await fetch(getFullApiUrl(USER_ENDPOINTS.CREATE_USER), {
@@ -122,25 +100,21 @@ export default function SignupSection({ onSwitchView }: SignupSectionProps) {
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include",
         body: JSON.stringify({ email, fullname, password }),
       });
-
       if (!response.ok) {
         const data = await response.json();
-        // Assuming user creation failure might be due to email already taken
         setErrors({ email: true });
         throw new Error(data.description || data.message || "Registration failed");
       }
-
       const data = await response.json();
-
       if (data.result && data.result.phrase) {
         setRecoveryPhrase(data.result.phrase);
         setShowRecoveryModal(true);
       } else {
         setShowSuccessModal(true);
       }
-
       toast.success(data.description || "Registration successful, please verify your email");
       setVerificationEmail(email);
       setIsVerif(true);
@@ -155,7 +129,6 @@ export default function SignupSection({ onSwitchView }: SignupSectionProps) {
       stopLoading();
     }
   };
-
   const handleResendOtp = async () => {
     try {
       startLoading();
@@ -164,14 +137,13 @@ export default function SignupSection({ onSwitchView }: SignupSectionProps) {
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include",
         body: JSON.stringify({ email: verificationEmail }),
       });
-
       if (!response.ok) {
         const data = await response.json();
         throw new Error(data.description || data.message || "Failed to resend OTP");
       }
-
       const data = await response.json();
       toast.success(data.description || "OTP has been resent to your email");
       startTimer();
@@ -185,7 +157,6 @@ export default function SignupSection({ onSwitchView }: SignupSectionProps) {
       stopLoading();
     }
   };
-
   const handleVerifyOtp = async (otpValue: string) => {
     try {
       startLoading();
@@ -194,25 +165,22 @@ export default function SignupSection({ onSwitchView }: SignupSectionProps) {
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include",
         body: JSON.stringify({
           email: verificationEmail,
           code: otpValue
         }),
       });
-
       if (!response.ok) {
         const data = await response.json();
         throw new Error(data.description || data.message || "OTP verification failed");
       }
-
       const data = await response.json();
-
       if (data.result && data.result.data) {
         const { accessToken, refreshToken, user } = data.result.data;
-
         authStore.login(accessToken);
-
         toast.success(data.description || "Email verified successfully");
+        router.refresh();
         router.push("/");
       }
     } catch (error) {
@@ -225,15 +193,11 @@ export default function SignupSection({ onSwitchView }: SignupSectionProps) {
       stopLoading();
     }
   };
-
   const handleSkipVerification = () => {
-    // Redirect to login page when user chooses to skip OTP verification
-    onSwitchView(); // Switch to login view
+    onSwitchView(); 
   };
-
   useEffect(() => {
     if (!isTimerActive) return;
-
     const interval = setInterval(() => {
       setCountdown((prev) => {
         if (prev <= 1) {
@@ -243,10 +207,8 @@ export default function SignupSection({ onSwitchView }: SignupSectionProps) {
         return prev - 1;
       });
     }, 1000);
-
     return () => clearInterval(interval);
   }, [isTimerActive]);
-
   return (
     <div className="flex flex-1 flex-col gap-2 h-full p-2">
       <div className="flex flex-6 w-full">
@@ -265,7 +227,6 @@ export default function SignupSection({ onSwitchView }: SignupSectionProps) {
                   <h4 className="text-xs text-secondary-theme-foreground font-base tracking-wide text-center">
                     We have sent a Code to your email, check it.
                   </h4>
-
                   <InputOTP
                     maxLength={6}
                     onComplete={(value) => {
@@ -284,15 +245,15 @@ export default function SignupSection({ onSwitchView }: SignupSectionProps) {
                       <InputOTPSlot index={5} />
                     </InputOTPGroup>
                   </InputOTP>
-
                   <div className="flex flex-2 w-full justify-center">
                     {isTimerActive ? (
                       <p className="text-sm font-base tracking-wider opacity-40">
                         Re-send OTP in {countdown} second..
                       </p>
                     ) : (
+                    <div className="flex flex-2 flex-col w-full items-center p-2">
                       <Button
-                        variant="primary"
+                        variant="link"
                         onClick={handleResendOtp}
                         className="flex flex-row w-1/2 items-center"
                       >
@@ -300,19 +261,17 @@ export default function SignupSection({ onSwitchView }: SignupSectionProps) {
                           Resend OTP
                         </h4>
                       </Button>
+                      <Button
+                        variant="primary"
+                        onClick={handleResendOtp}
+                        className="flex flex-row w-1/2 items-center"
+                      >
+                        <h4 className="text-sm font-base tracking-widest">
+                          Nanti Saja
+                        </h4>
+                      </Button>
+                    </div>
                     )}
-                  </div>
-
-                  <div className="flex flex-5 w-full items-center justify-center">
-                    <Button
-                      variant="link"
-                      onClick={handleSkipVerification}
-                      className="flex flex-row w-1/2 items-center"
-                    >
-                      <h4 className="text-sm font-base tracking-widest">
-                        Nanti Saja
-                      </h4>
-                    </Button>
                   </div>
                 </div>
               </>
@@ -331,7 +290,6 @@ export default function SignupSection({ onSwitchView }: SignupSectionProps) {
                       }}
                     />
                   </div>
-
                   <div className="flex w-full items-center">
                     <Input
                       type="email"
@@ -344,7 +302,6 @@ export default function SignupSection({ onSwitchView }: SignupSectionProps) {
                       }}
                     />
                   </div>
-
                   <div className="relative flex w-full items-center">
                     <Input
                       type={showPassword ? "text" : "password"}
@@ -367,7 +324,6 @@ export default function SignupSection({ onSwitchView }: SignupSectionProps) {
                       )}
                     </div>
                   </div>
-
                   <div className="relative flex w-full items-center">
                     <Input
                       type={showConfirmPassword ? "text" : "password"}
@@ -393,7 +349,6 @@ export default function SignupSection({ onSwitchView }: SignupSectionProps) {
                     </div>
                   </div>
                 </div>
-
                 <div className="flex flex-3 flex-row gap-2">
                   <div className="flex flex-1 w-full justify-end">
                     <Button
@@ -412,7 +367,6 @@ export default function SignupSection({ onSwitchView }: SignupSectionProps) {
           </motion.div>
         </AnimatePresence>
       </div>
-
       <div className="flex flex-4 flex-col gap-2">
         <div className="flex flex-1 flex-row gap-2 justify-center">
           <div className="flex flex-1 mt-3 border-t border-ring/50" />
@@ -421,7 +375,6 @@ export default function SignupSection({ onSwitchView }: SignupSectionProps) {
           </h4>
           <div className="flex flex-1 mt-3 border-t border-ring/50" />
         </div>
-
         <div className="flex flex-9 flex-col gap-2 items-center">
           <div className="flex flex-4 flex-row w-full gap-2 items-center justify-center">
             <div className="flex flex-row gap-2 items-center">
@@ -455,7 +408,6 @@ export default function SignupSection({ onSwitchView }: SignupSectionProps) {
               </Button>
             </div>
           </div>
-
           <div className="flex flex-6 w-full flex-row gap-2 items-end justify-center">
             <Button
               variant="link"
@@ -472,7 +424,6 @@ export default function SignupSection({ onSwitchView }: SignupSectionProps) {
         onClose={() => setShowRecoveryModal(false)}
         phrase={recoveryPhrase}
       />
-
       <SuccessModal
         isOpen={showSuccessModal}
         onClose={() => setShowSuccessModal(false)}
@@ -480,7 +431,6 @@ export default function SignupSection({ onSwitchView }: SignupSectionProps) {
         message="Your account has been created successfully. Please check your email to verify your account."
         onConfirm={() => {
           setShowSuccessModal(false);
-          // Optionally redirect to login or another page
         }}
       />
     </div>

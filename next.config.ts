@@ -1,7 +1,5 @@
 import withPWAInit from "@ducanh2912/next-pwa";
 import type { NextConfig } from "next";
-
-
 const withPWA = withPWAInit({
   dest: "public",
   register: true,
@@ -36,7 +34,6 @@ const withPWA = withPWAInit({
     document: "/offline",
   },
 });
-
 const nextConfig: NextConfig = {
   webpack: (config, { dev }) => {
     if (dev) {
@@ -50,10 +47,16 @@ const nextConfig: NextConfig = {
         ],
       };
     }
-    return config;
-  },
-  // Add empty turbopack config to silence the error
-  turbopack: {},
-};
-
-export default withPWA(nextConfig);
+        return config;
+      },
+      async rewrites() {
+        return [
+          {
+            source: "/api-proxy/:path*",
+            destination: `${process.env.NEXT_PUBLIC_API_URL}/:path*`,
+          },
+        ];
+      },
+      turbopack: {},
+    };
+    export default withPWA(nextConfig);

@@ -1,5 +1,4 @@
 "use client";
-
 import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { useLoaderStore } from "@/stores/loaderStore";
@@ -7,7 +6,6 @@ import { useAssetPreloader } from "@/hooks/useAssetPreloader";
 import { initialAssets } from "@/libs/preload-assets";
 import { ThreeDot } from "react-loading-indicators";
 import { AnimatePresence, motion } from "motion/react";
-
 export default function LoaderProvider({
   children,
 }: {
@@ -16,9 +14,7 @@ export default function LoaderProvider({
   const pathname = usePathname();
   const { isLoading, startLoading, stopLoading } = useLoaderStore();
   const { isPreloaded } = useAssetPreloader(initialAssets);
-
   const isInitialLoad = useRef(true);
-
   useEffect(() => {
     if (!isPreloaded) return;
     const timer = setTimeout(() => {
@@ -27,19 +23,14 @@ export default function LoaderProvider({
     }, 500);
     return () => clearTimeout(timer);
   }, [isPreloaded, stopLoading]);
-
   useEffect(() => {
     if (isInitialLoad.current) return;
-
     startLoading();
-
     const timer = setTimeout(() => {
       stopLoading();
     }, 700);
-
     return () => clearTimeout(timer);
   }, [pathname, startLoading, stopLoading]);
-
   return (
     <>
       <AnimatePresence>
@@ -55,7 +46,6 @@ export default function LoaderProvider({
           </motion.div>
         )}
       </AnimatePresence>
-
       <motion.div
         className="min-h-screen w-full"
         animate={{ opacity: isLoading ? 0 : 1 }}

@@ -1,11 +1,10 @@
 "use client";
-
 import { useEffect, useRef, useState } from "react";
 import { BellRing, ChevronLeft } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useLoaderStore } from "@/stores/loaderStore";
 import { AnimatePresence, motion } from "motion/react";
-
+import { useAuth } from "@/stores/authStore"; 
 const PAGE_TITLES: Record<string, string> = {
   "/package": "Paket",
   "/invoice": "Tagihan",
@@ -13,7 +12,6 @@ const PAGE_TITLES: Record<string, string> = {
   "/payment": "Pembayaran",
   "/history": "Riwayat",
 };
-
 const NOTIFICATIONS = [
   {
     id: 1,
@@ -46,20 +44,31 @@ const NOTIFICATIONS = [
     read: true,
   },
 ];
-
 export default function HeaderSection() {
   const pathname = usePathname();
   const router = useRouter();
   const { startLoading } = useLoaderStore();
-
+  const { user } = useAuth(); 
   const [openNotif, setOpenNotif] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
-
+  const [greeting, setGreeting] = useState("Selamat Pagi"); 
   const isHome = pathname === "/";
   const pageTitle = PAGE_TITLES[pathname];
-
   const hasUnread = NOTIFICATIONS.some((n) => !n.read);
-
+  useEffect(() => {
+    const hours = new Date().getHours();
+    let newGreeting = "Selamat Pagi";
+    if (hours >= 4 && hours < 10) {
+      newGreeting = "Selamat Pagi";
+    } else if (hours >= 10 && hours < 15) {
+      newGreeting = "Selamat Siang";
+    } else if (hours >= 15 && hours < 18) {
+      newGreeting = "Selamat Sore";
+    } else {
+      newGreeting = "Selamat Malam";
+    }
+    setGreeting(newGreeting);
+  }, []);
   const handleBack = () => {
     startLoading();
     if (window.history.length > 1) {
@@ -68,25 +77,21 @@ export default function HeaderSection() {
       router.push("/");
     }
   };
-
   const handleToNotificationPage = () => {
     setOpenNotif(false);
     startLoading();
     router.push("/notification");
   };
-
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
         setOpenNotif(false);
       }
     };
-
     document.addEventListener("mousedown", handleClickOutside);
     return () =>
       document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
   return (
     <header className="relative flex w-full flex-col gap-4 rounded-b-3xl bg-primary-theme px-4 py-5 text-primary-theme-foreground shadow-xl">
       <div className="flex items-center justify-between">
@@ -94,9 +99,11 @@ export default function HeaderSection() {
         {isHome ? (
           <div className="flex flex-col">
             <span className="text-sm font-semibold opacity-80">
-              Hi, Selamat Sore!
+              Hi, {greeting}!
             </span>
-            <span className="text-lg font-bold">Saepul</span>
+            <span className="text-lg font-bold">
+              {user?.fullname || user?.email?.split('@')[0] || "Guest"}
+            </span>
           </div>
         ) : (
           <div className="flex items-center gap-2">
@@ -108,19 +115,16 @@ export default function HeaderSection() {
             </span>
           </div>
         )}
-
         <div className="relative" ref={notifRef}>
           <button
             onClick={() => setOpenNotif((v) => !v)}
             className="relative rounded-full bg-primary-theme-foreground/20 p-3 shadow-xl"
           >
             <BellRing size={20} />
-
             {hasUnread && (
               <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-green-500 ring-2 ring-primary-theme" />
             )}
           </button>
-
           <AnimatePresence>
             {openNotif && (
               <motion.div
@@ -156,7 +160,6 @@ export default function HeaderSection() {
                       Belum ada notifikasi
                     </div>
                   )}
-
                   <button
                     onClick={handleToNotificationPage}
                     className="px-4 py-3 text-center text-sm font-semibold text-primary-theme hover:bg-muted"
