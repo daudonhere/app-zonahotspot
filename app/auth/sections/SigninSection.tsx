@@ -14,7 +14,7 @@ import {
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useLoaderStore } from "@/stores/loaderStore";
-import { AUTH_ENDPOINTS } from "@/libs/api/endpoints";
+import { AUTH_ENDPOINTS, USER_ENDPOINTS } from "@/libs/api/endpoints";
 import { getFullApiUrl } from "@/libs/api/utils";
 import { authStore } from "@/stores/authStore";
 import RecoveryPhraseModal from "@/components/ui/recovery-phrase-modal";
@@ -31,6 +31,7 @@ export default function SigninSection({ onSwitchView }: SigninSectionProps) {
   const [recoveryPhrase, setRecoveryPhrase] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [passphrase, setPassphrase] = useState("");
   const [errors, setErrors] = useState<{ email?: boolean; password?: boolean }>({});
   const router = useRouter();
   const { startLoading, stopLoading } = useLoaderStore();
@@ -137,6 +138,58 @@ export default function SigninSection({ onSwitchView }: SigninSectionProps) {
     setIsTimerActive(true);
     console.log("Re-Sending OTP...");
   };
+
+  const handleRecoverAccount = async () => {
+    if (!email) {
+      toast.error("Please enter your email");
+      return;
+    }
+
+    if (!passphrase) {
+      toast.error("Please enter your passphrase");
+      return;
+    }
+
+    try {
+      startLoading();
+      const response = await fetch(getFullApiUrl(USER_ENDPOINTS.RECOVER_ACCOUNT), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          email,
+          passphrase
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.description || data.message || "Recovery failed");
+      }
+
+      const data = await response.json();
+      toast.success(data.description || "Account recovery successful");
+
+      // Reset form fields
+      setEmail("");
+      setPassphrase("");
+
+      // Navigate back to login after a short delay
+      setTimeout(() => {
+        handleNavigate("login");
+      }, 1500);
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error("An error occurred during account recovery");
+      }
+    } finally {
+      stopLoading();
+    }
+  };
   useEffect(() => {
     if (!isTimerActive) return;
     const interval = setInterval(() => {
@@ -231,6 +284,17 @@ export default function SigninSection({ onSwitchView }: SigninSectionProps) {
                     type="email"
                     placeholder="Email"
                     className="text-sm text-primary w-full"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                </div>
+                <div className="flex w-full items-center">
+                  <Input
+                    type="text"
+                    placeholder="Passphrase"
+                    className="text-sm text-primary w-full"
+                    value={passphrase}
+                    onChange={(e) => setPassphrase(e.target.value)}
                   />
                 </div>
               </div>
@@ -247,7 +311,7 @@ export default function SigninSection({ onSwitchView }: SigninSectionProps) {
                 <div className="flex flex-4 w-full justify-end">
                   <Button
                     variant="primary"
-                    onClick={() => handleNavigate("otp")}
+                    onClick={handleRecoverAccount}
                     className="flex flex-row w-full items-center"
                   >
                     <h4 className="text-sm font-base tracking-widest">

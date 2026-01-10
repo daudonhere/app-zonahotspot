@@ -194,7 +194,9 @@ export default function SignupSection({ onSwitchView }: SignupSectionProps) {
     }
   };
   const handleSkipVerification = () => {
-    onSwitchView(); 
+    setIsVerif(false);
+    setVerificationEmail("");
+    onSwitchView();
   };
   useEffect(() => {
     if (!isTimerActive) return;
@@ -263,7 +265,7 @@ export default function SignupSection({ onSwitchView }: SignupSectionProps) {
                       </Button>
                       <Button
                         variant="primary"
-                        onClick={handleResendOtp}
+                        onClick={handleSkipVerification}
                         className="flex flex-row w-1/2 items-center"
                       >
                         <h4 className="text-sm font-base tracking-widest">
