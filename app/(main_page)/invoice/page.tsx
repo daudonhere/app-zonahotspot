@@ -120,7 +120,7 @@ Jatuh Tempo : ${data.dueDate}
 Jumlah : ${formattedAmount}
 mohon informasi lebih lanjut ya!`;
   }
-  const whatsappUrl = `https:
+  const whatsappUrl = `https://wa.me/${CONTACT_INFO.waNumber}?text=${encodeURIComponent(message)}`;
   let badgeColor = "bg-primary-theme/10 text-primary-theme";
   if (isExpired) badgeColor = "bg-gray-200 text-gray-600";
   if (isPaid) badgeColor = "bg-green-100 text-green-700";
